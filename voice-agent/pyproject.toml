@@ -3,11 +3,14 @@ name = "aarya-voice-agent"
 version = "0.1.0"
 requires-python = ">=3.14"
 dependencies = [
+    "dotenv>=0.9.9",
     "livekit>=1.1.14",
     "livekit-agents[groq]~=1.6",
     "livekit-api>=1.2.0",
     "livekit-plugins-assemblyai>=1.6.8",
+    "livekit-plugins-cartesia>=1.6.8",
     "livekit-plugins-deepgram>=1.6.8",
+    "livekit-plugins-google>=1.6.8",
     "livekit-plugins-noise-cancellation>=0.3.0",
     "livekit-plugins-openai>=1.6.8",
     "livekit-plugins-silero>=1.6.8",
