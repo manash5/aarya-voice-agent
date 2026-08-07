@@ -4,10 +4,11 @@ import time
 from dotenv import load_dotenv
 from livekit import agents
 from livekit.agents import AgentServer, AgentSession, Agent, room_io, llm, stt, tts, inference, TurnHandlingOptions
-from livekit.plugins import silero, deepgram, groq, noise_cancellation
+from livekit.plugins import silero, deepgram, groq, noise_cancellation, cartesia
 from prompt import build_instructions
 from config.tts_pool import warm_tts_pool
 from evaluation.call_metrics import attach_latency_logging
+from companies.scalina_media import COMPANY_NAME, COMPANY_PROFILE
 
 logger = logging.getLogger(__name__)
 load_dotenv(".env.local")
@@ -29,9 +30,14 @@ server = AgentServer()
 async def my_agent(ctx: agents.JobContext):
     job_start_time = time.time()
     agent_name = "Aarya"
-    company_name = ""  # set once the company-profile system exists
+    company_name = COMPANY_NAME
 
     deepgram_tts = deepgram.TTS(model="aura-2-theia-en")
+    cartesia_tts = cartesia.TTS(
+        model="sonic-3",
+        # voice="c2ad7092-0447-47ea-948b-61fbb6faf153",
+        voice="49743b08-0f5d-4741-839c-b12933853780"
+    )
 
     session = AgentSession(
         stt = stt.FallbackAdapter(
@@ -43,6 +49,7 @@ async def my_agent(ctx: agents.JobContext):
         ),
         llm = llm.FallbackAdapter(
             [
+            groq.LLM(model="llama-3.1-8b-instant"),
             groq.LLM(model="llama-3.3-70b-versatile"),
             inference.LLM(model="google/gemini-2.5-flash-lite"),
             inference.LLM(model="openai/gpt-4.1-mini"),
@@ -50,9 +57,10 @@ async def my_agent(ctx: agents.JobContext):
         ),
         tts = tts.FallbackAdapter(
             [
+            cartesia_tts, 
             deepgram_tts,
             inference.TTS.from_model_string("deepgram/aura-2:theia"),
-            inference.TTS.from_model_string("cartesia/sonic-3:f31cc6a7-c1e8-4764-980c-60a361443dd1")
+            # inference.TTS.from_model_string("cartesia/sonic-3:f31cc6a7-c1e8-4764-980c-60a361443dd1")
             ]
         ),
         vad=silero.VAD.load(),
@@ -61,7 +69,7 @@ async def my_agent(ctx: agents.JobContext):
             endpointing={
                 "mode": "fixed",
                 "min_delay": 0.45,
-                "max_delay": 0.80,
+                "max_delay": 0.7,
             },
             interruption={
                 "mode": "adaptive",
@@ -82,7 +90,7 @@ async def my_agent(ctx: agents.JobContext):
 
     await session.start(
         room=ctx.room,
-        agent=Assistant(agent_name=agent_name),
+        agent=Assistant(agent_name=agent_name, company_profile=COMPANY_PROFILE),
         room_options=room_io.RoomOptions(
             audio_input=room_io.AudioInputOptions(
                 noise_cancellation=noise_cancellation.BVC(),

@@ -6,7 +6,7 @@ import asyncio
 import logging
 import time
 
-from livekit.agents import AgentStateChangedEvent, MetricsCollectedEvent, metrics
+from livekit.agents import AgentStateChangedEvent, MetricsCollectedEvent, UserStateChangedEvent, metrics
 
 from config.tts_pool import warm_tts_pool
 
@@ -58,5 +58,32 @@ def attach_latency_logging(session, ctx, pooled_tts, job_start_time: float) -> N
             )
         else:
             # No EOU yet means this is the opening greeting, not a reply
+            elapsed = time.time() - job_start_time
+            logger.info(f"Time to greeting audio: {elapsed:.3f}s (from job start)")
+
+
+def attach_realtime_latency_logging(session, job_start_time: float) -> None:
+    """For RealtimeModel-based agents (no separate STT/LLM/TTS stages, so no
+    EOU metrics exist). Measures real wall-clock time from the user's audio
+    ending to the agent's audio starting - comparable to attach_latency_logging's
+    true_latency, not the RealtimeModelMetrics.ttft field (which times something
+    internal to the model, not the full round trip the caller actually hears)."""
+    last_user_stopped_speaking: float | None = None
+
+    @session.on("user_state_changed")
+    def _on_user_state_changed(ev: UserStateChangedEvent):
+        nonlocal last_user_stopped_speaking
+        if ev.old_state == "speaking" and ev.new_state != "speaking":
+            last_user_stopped_speaking = ev.created_at
+
+    @session.on("agent_state_changed")
+    def _on_agent_state_changed(ev: AgentStateChangedEvent):
+        if ev.new_state != "speaking":
+            return
+
+        if last_user_stopped_speaking is not None:
+            elapsed = time.time() - last_user_stopped_speaking
+            logger.info(f"Time to first audio (real): {elapsed:.3f}s")
+        else:
             elapsed = time.time() - job_start_time
             logger.info(f"Time to greeting audio: {elapsed:.3f}s (from job start)")
