@@ -1,25 +1,25 @@
+"""Gemini Live speech-to-speech entrypoint (no separate STT/LLM/TTS stages)."""
+
 import logging
 import time
+
 from dotenv import load_dotenv
 from livekit import agents
-from livekit.agents import AgentServer, AgentSession, Agent, room_io, MetricsCollectedEvent, metrics
+from livekit.agents import (
+    AgentServer,
+    AgentSession,
+    MetricsCollectedEvent,
+    metrics,
+    room_io,
+)
 from livekit.plugins import google, noise_cancellation
-from prompt import build_instructions
-from companies.scalina_media import COMPANY_NAME, COMPANY_PROFILE
-from evaluation.call_metrics import attach_realtime_latency_logging
+
+from aarya.assistant import Assistant
+from aarya.companies.scalina_media import COMPANY_PROFILE
+from aarya.evaluation.call_metrics import attach_realtime_latency_logging
 
 logger = logging.getLogger(__name__)
 load_dotenv(".env.local")
-
-
-class Assistant(Agent):
-    def __init__(self, agent_name: str = "Aarya", company_profile: str = ""):
-        super().__init__(
-            instructions=build_instructions(
-                agent_name=agent_name, company_profile=company_profile
-            )
-        )
-
 
 server = AgentServer()
 
@@ -29,11 +29,12 @@ async def my_agent(ctx: agents.JobContext):
     job_start_time = time.time()
     agent_name = "Aarya"
 
-    # same idea as fast_agent.py (one speech-to-speech model, no stt=/tts=),
-    # but Gemini Live instead of OpenAI Realtime - uses GOOGLE_API_KEY, which
-    # is already set, no new account needed
+    # Gemini Live instead of a cascaded STT/LLM/TTS stack - uses GOOGLE_API_KEY
     session = AgentSession(
-        llm=google.realtime.RealtimeModel(model="gemini-3.1-flash-live-preview", voice="Puck"),
+        llm=google.realtime.RealtimeModel(
+            model="gemini-3.1-flash-live-preview",
+            voice="Puck",
+        ),
     )
 
     @session.on("metrics_collected")
