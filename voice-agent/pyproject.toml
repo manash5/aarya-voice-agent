@@ -17,3 +17,6 @@ dependencies = [
     "livekit-protocol>=1.1.22",
     "python-dotenv>=1.2.2",
 ]
+
+[tool.setuptools.packages.find]
+include = ["aarya*"]

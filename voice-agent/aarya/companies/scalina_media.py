@@ -1,6 +1,6 @@
-"""Demo company profile for prompt.build_instructions(). One file per
-company - swap COMPANY_NAME/COMPANY_PROFILE in the agent that uses it to
-answer for a different client.
+"""Demo company profile for build_instructions(). One file per company -
+swap COMPANY_NAME/COMPANY_PROFILE in the agent that uses it to answer for
+a different client.
 """
 
 COMPANY_NAME = "Scalina Media"

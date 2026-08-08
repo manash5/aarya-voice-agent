@@ -6,9 +6,14 @@ import asyncio
 import logging
 import time
 
-from livekit.agents import AgentStateChangedEvent, MetricsCollectedEvent, UserStateChangedEvent, metrics
+from livekit.agents import (
+    AgentStateChangedEvent,
+    MetricsCollectedEvent,
+    UserStateChangedEvent,
+    metrics,
+)
 
-from config.tts_pool import warm_tts_pool
+from aarya.config.tts_pool import warm_tts_pool
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +24,7 @@ def attach_latency_logging(session, ctx, pooled_tts, job_start_time: float) -> N
     TTS provider doesn't keep a connection pool (e.g. non-streaming Azure)."""
     usage_collector = metrics.UsageCollector()
     last_eou_metrics: metrics.EOUMetrics | None = None
+    greeting_logged = False
 
     @session.on("metrics_collected")
     def _on_metrics_collected(ev: MetricsCollectedEvent):
@@ -45,6 +51,7 @@ def attach_latency_logging(session, ctx, pooled_tts, job_start_time: float) -> N
 
     @session.on("agent_state_changed")
     def _on_agent_state_changed(ev: AgentStateChangedEvent):
+        nonlocal greeting_logged
         if ev.new_state != "speaking":
             return
 
@@ -56,8 +63,10 @@ def attach_latency_logging(session, ctx, pooled_tts, job_start_time: float) -> N
                 f"{true_latency:.3f}s true latency "
                 f"(EOU wait: {last_eou_metrics.end_of_utterance_delay:.3f}s)"
             )
-        else:
-            # No EOU yet means this is the opening greeting, not a reply
+        elif not greeting_logged:
+            # Only the first speak() before any user EOU is the greeting;
+            # false-interruption resumes would otherwise log a bogus 6s+ figure
+            greeting_logged = True
             elapsed = time.time() - job_start_time
             logger.info(f"Time to greeting audio: {elapsed:.3f}s (from job start)")
 
