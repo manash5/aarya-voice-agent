@@ -11,18 +11,16 @@ def default_turn_handling(*, max_delay: float = 0.75) -> TurnHandlingOptions:
     return TurnHandlingOptions(
         turn_detection=inference.TurnDetector(),
         endpointing={
-            # fixed is more predictable than dynamic for phone-style calls;
-            # LiveKit warned that 0.25s was ahead of STT finals
             "mode": "fixed",
-            "min_delay": 0.35,
+            # give Deepgram time to finish finals on longer booking phrases
+            "min_delay": 0.40,
             "max_delay": max_delay,
         },
         interruption={
             "mode": "adaptive",
-            # slightly higher so console mic / noise doesn't kill the greeting
-            "min_duration": 0.45,
+            "min_duration": 0.55,
             "resume_false_interruption": True,
-            "false_interruption_timeout": 0.60,
+            "false_interruption_timeout": 0.70,
         },
         preemptive_generation={
             "preemptive_tts": True,

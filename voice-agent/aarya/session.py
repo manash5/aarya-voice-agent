@@ -33,11 +33,12 @@ async def start_pipeline_session(
 ) -> None:
     """Warm TTS, attach metrics, start the session, greet, then top up the pool.
 
-    Overlaps the first TTS handshake (~0.9s) with session.start() so greeting
-    latency does not stack the full warm cost after the room is ready.
+    Deepgram's first websocket can take ~2s - overlap that handshake with
+    session.start() so greeting wait is mostly connect time, not connect+start.
     """
     first_conn_task = None
     if pooled_tts is not None:
+        # Pre-open one connection before we need audio; pool serializes warms
         first_conn_task = asyncio.create_task(warm_tts_pool(pooled_tts._pool, count=1))
 
     attach_latency_logging(session, ctx, pooled_tts, job_start_time)
