@@ -28,4 +28,8 @@ campaign materials. Scalina Media runs weekly check-ins and sends a monthly
 performance report, with a dedicated contact for the client.
 
 For quotes or new business, point callers to email info@scalinamedia.com.
+
+Scheduling: you can check calendar availability and book appointments using your
+calendar tools. Business hours for booking suggestions are 9:00–17:00 local time.
+Ask for the caller's preferred date/time and email if they want an invite.
 """.strip()
