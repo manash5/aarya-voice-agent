@@ -9,6 +9,8 @@ from prompt import build_instructions
 from config.tts_pool import warm_tts_pool
 from evaluation.call_metrics import attach_latency_logging
 from companies.scalina_media import COMPANY_NAME, COMPANY_PROFILE
+from livekit.agents.beta.workflows import GetEmailTask
+from livekit.agents import function_tool, RunContext
 
 logger = logging.getLogger(__name__)
 load_dotenv(".env.local")
@@ -21,6 +23,36 @@ class Assistant(Agent):
                 agent_name=agent_name, company_profile=company_profile
             )
         )
+
+
+
+    @function_tool()
+    async def collect_email(self, context: RunContext) -> str:
+        """
+        Collect and validate the caller's email address.
+
+        Use this when an email address is genuinely needed, such as for
+        sending information or a future appointment confirmation.
+
+        Do not use this casually or ask for an email when it is not needed.
+        """
+
+        email_result = await GetEmailTask(
+            chat_ctx=context.session.chat_ctx,
+            extra_instructions="""
+            Collect the caller's email address naturally and verify that it is valid.
+
+            If the caller clearly says they do not want to provide an email,
+            or they cannot provide one, do not keep asking for it.
+
+            In that case, tell the caller that the information can be sent
+            to them by SMS instead.
+
+            Do not invent, guess, or modify an email address.
+            """,
+        )
+        print(email_result)
+        return f"Email collected successfully: {email_result.email_address}"
 
 
 server = AgentServer()
@@ -57,7 +89,7 @@ async def my_agent(ctx: agents.JobContext):
         ),
         tts = tts.FallbackAdapter(
             [
-            cartesia_tts, 
+
             deepgram_tts,
             inference.TTS.from_model_string("deepgram/aura-2:theia"),
             # inference.TTS.from_model_string("cartesia/sonic-3:f31cc6a7-c1e8-4764-980c-60a361443dd1")

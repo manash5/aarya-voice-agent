@@ -27,5 +27,5 @@ TikTok, and Google Business accounts, plus logos, brand photos, and past
 campaign materials. Scalina Media runs weekly check-ins and sends a monthly
 performance report, with a dedicated contact for the client.
 
-For quotes or new business, point callers to email info@scalinamedia.com.
+For quotes or new business, ask the users email.
 """.strip()

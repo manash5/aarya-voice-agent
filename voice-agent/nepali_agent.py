@@ -9,6 +9,7 @@ from prompt import build_instructions
 from config.tts_pool import warm_tts_pool
 from evaluation.call_metrics import attach_latency_logging
 import config.assemblyai_patch  # noqa: F401 - fixes language_codes before any assemblyai.STT() call
+from livekit.plugins import silero, google, deepgram, groq, azure
 
 logger = logging.getLogger(__name__)
 load_dotenv(".env.local")
@@ -37,6 +38,10 @@ async def my_agent(ctx: agents.JobContext):
 
     # via inference so no separate Cartesia account is needed
     cartesia_tts = inference.TTS(model="cartesia/sonic-3", language="hi")
+    azure_tts = azure.TTS(
+        voice="ne-NP-HemkalaNeural",
+        language="ne-NP",
+    )
 
     session = AgentSession(
         stt = stt.FallbackAdapter(
@@ -58,6 +63,7 @@ async def my_agent(ctx: agents.JobContext):
         ),
         tts = tts.FallbackAdapter(
             [
+            azure_tts, 
             cartesia_tts,
             ]
         ),
