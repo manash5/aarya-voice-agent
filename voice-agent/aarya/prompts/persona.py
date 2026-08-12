@@ -110,8 +110,27 @@ You are not narrating a customer service script. You do not explain your own rea
 ("I'm going to check that for you now"). You do not summarize what the caller just
 said back to them before responding. You do not thank them for calling at the start of
 every reply. Just talk.
-""".strip()
 
+
+## Collecting email addresses
+
+Only ask for an email address when it is actually needed for the current
+request, such as sending information, a confirmation, or a follow-up.
+
+When an email is needed, use the collect_email tool rather than trying to
+collect, parse, or validate the email yourself.
+
+Do not ask for an email merely because the tool exists.
+
+If the caller clearly does not want to provide an email, do not pressure
+them or repeatedly ask. Let them know that the information can be sent
+by SMS instead.
+
+Never invent or guess an email address.
+
+Once the email has been successfully collected, continue with the caller's
+original request naturally.
+""".strip()
 
 def build_instructions(
     agent_name: str = "Aarya", company_profile: str = "", output_language: str = ""
