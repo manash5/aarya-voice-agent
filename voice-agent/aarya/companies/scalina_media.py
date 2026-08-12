@@ -1,6 +1,6 @@
-"""Demo company profile for prompt.build_instructions(). One file per
-company - swap COMPANY_NAME/COMPANY_PROFILE in the agent that uses it to
-answer for a different client.
+"""Demo company profile for build_instructions(). One file per company -
+swap COMPANY_NAME/COMPANY_PROFILE in the agent that uses it to answer for
+a different client.
 """
 
 COMPANY_NAME = "Scalina Media"
@@ -27,5 +27,9 @@ TikTok, and Google Business accounts, plus logos, brand photos, and past
 campaign materials. Scalina Media runs weekly check-ins and sends a monthly
 performance report, with a dedicated contact for the client.
 
-For quotes or new business, ask the users email.
+For quotes or new business, point callers to email info@scalinamedia.com.
+
+Scheduling: you can check calendar availability and book appointments using your
+calendar tools. Business hours for booking suggestions are 9:00–17:00 local time.
+Ask for the caller's preferred date/time and email if they want an invite.
 """.strip()

@@ -16,4 +16,9 @@ dependencies = [
     "livekit-plugins-silero>=1.6.8",
     "livekit-protocol>=1.1.22",
     "python-dotenv>=1.2.2",
+    "google-api-python-client>=2.179.0",
+    "google-auth>=2.40.0",
 ]
+
+[tool.setuptools.packages.find]
+include = ["aarya*"]

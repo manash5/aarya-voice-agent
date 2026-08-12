@@ -1,59 +1,19 @@
-import asyncio
+"""English receptionist entrypoint (Scalina Media demo + Google Calendar)."""
+
 import logging
 import time
+
 from dotenv import load_dotenv
 from livekit import agents
-from livekit.agents import AgentServer, AgentSession, Agent, room_io, llm, stt, tts, inference, TurnHandlingOptions
-from livekit.plugins import silero, deepgram, groq, noise_cancellation, cartesia
-from prompt import build_instructions
-from config.tts_pool import warm_tts_pool
-from evaluation.call_metrics import attach_latency_logging
-from companies.scalina_media import COMPANY_NAME, COMPANY_PROFILE
-from livekit.agents.beta.workflows import GetEmailTask
-from livekit.agents import function_tool, RunContext
+from livekit.agents import AgentServer
+
+from aarya.assistants.calendar import SHORT_COMPANY, CalendarAssistant
+from aarya.companies.scalina_media import COMPANY_NAME
+from aarya.pipelines.calendar import build_calendar_pipeline
+from aarya.session import english_greeting, start_pipeline_session
 
 logger = logging.getLogger(__name__)
 load_dotenv(".env.local")
-
-
-class Assistant(Agent):
-    def __init__(self, agent_name: str = "Aarya", company_profile: str = ""):
-        super().__init__(
-            instructions=build_instructions(
-                agent_name=agent_name, company_profile=company_profile
-            )
-        )
-
-
-
-    @function_tool()
-    async def collect_email(self, context: RunContext) -> str:
-        """
-        Collect and validate the caller's email address.
-
-        Use this when an email address is genuinely needed, such as for
-        sending information or a future appointment confirmation.
-
-        Do not use this casually or ask for an email when it is not needed.
-        """
-
-        email_result = await GetEmailTask(
-            chat_ctx=context.session.chat_ctx,
-            extra_instructions="""
-            Collect the caller's email address naturally and verify that it is valid.
-
-            If the caller clearly says they do not want to provide an email,
-            or they cannot provide one, do not keep asking for it.
-
-            In that case, tell the caller that the information can be sent
-            to them by SMS instead.
-
-            Do not invent, guess, or modify an email address.
-            """,
-        )
-        print(email_result)
-        return f"Email collected successfully: {email_result.email_address}"
-
 
 server = AgentServer()
 
@@ -62,85 +22,19 @@ server = AgentServer()
 async def my_agent(ctx: agents.JobContext):
     job_start_time = time.time()
     agent_name = "Aarya"
-    company_name = COMPANY_NAME
 
-    deepgram_tts = deepgram.TTS(model="aura-2-theia-en")
-    cartesia_tts = cartesia.TTS(
-        model="sonic-3",
-        # voice="c2ad7092-0447-47ea-948b-61fbb6faf153",
-        voice="49743b08-0f5d-4741-839c-b12933853780"
+    bundle = build_calendar_pipeline()
+    await start_pipeline_session(
+        ctx=ctx,
+        session=bundle.session,
+        agent=CalendarAssistant(
+            agent_name=agent_name,
+            company_profile=SHORT_COMPANY,
+        ),
+        pooled_tts=bundle.pooled_tts,
+        job_start_time=job_start_time,
+        greeting=english_greeting(agent_name, COMPANY_NAME),
     )
-
-    session = AgentSession(
-        stt = stt.FallbackAdapter(
-            [
-                deepgram.STT(model="nova-3", language="multi"),
-                inference.STT.from_model_string("deepgram/nova-3:multi"),
-                inference.STT.from_model_string("assemblyai/universal-streaming:en")
-            ]
-        ),
-        llm = llm.FallbackAdapter(
-            [
-            groq.LLM(model="llama-3.1-8b-instant"),
-            groq.LLM(model="llama-3.3-70b-versatile"),
-            inference.LLM(model="google/gemini-2.5-flash-lite"),
-            inference.LLM(model="openai/gpt-4.1-mini"),
-            ]
-        ),
-        tts = tts.FallbackAdapter(
-            [
-
-            deepgram_tts,
-            inference.TTS.from_model_string("deepgram/aura-2:theia"),
-            # inference.TTS.from_model_string("cartesia/sonic-3:f31cc6a7-c1e8-4764-980c-60a361443dd1")
-            ]
-        ),
-        vad=silero.VAD.load(),
-        turn_handling=TurnHandlingOptions(
-            turn_detection=inference.TurnDetector(),
-            endpointing={
-                "mode": "fixed",
-                "min_delay": 0.45,
-                "max_delay": 0.7,
-            },
-            interruption={
-                "mode": "adaptive",
-                "min_duration": 0.50,
-                "resume_false_interruption": True,
-                "false_interruption_timeout": 0.60,
-            },
-            preemptive_generation={
-                "preemptive_tts": True,
-            },
-        ),
-    )
-
-    # overlaps its ~0.9s handshake with session.start() below instead of stacking after it
-    first_conn_task = asyncio.create_task(warm_tts_pool(deepgram_tts._pool, count=1))
-
-    attach_latency_logging(session, ctx, deepgram_tts, job_start_time)
-
-    await session.start(
-        room=ctx.room,
-        agent=Assistant(agent_name=agent_name, company_profile=COMPANY_PROFILE),
-        room_options=room_io.RoomOptions(
-            audio_input=room_io.AudioInputOptions(
-                noise_cancellation=noise_cancellation.BVC(),
-            ),
-        ),
-    )
-
-    await first_conn_task
-
-    # say() skips the LLM - name and wording stay fixed every call
-    greeting = (
-        f"Hello, this is {agent_name} speaking from {company_name}."
-        if company_name
-        else f"Hello, this is {agent_name} speaking."
-    )
-    # claim the ready connection before the pool top-up queues behind it
-    await session.say(f"{greeting} How may I help you?")
-    asyncio.create_task(warm_tts_pool(deepgram_tts._pool, count=2))
 
 
 if __name__ == "__main__":
