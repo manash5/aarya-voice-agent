@@ -36,7 +36,7 @@ def _calendar_rules() -> str:
 
 Today is {now.strftime('%A')} {today} ({tz.key}). Tomorrow is {tomorrow}.
 Upcoming: {', '.join(days)}.
-
+ 
 Tools: check_availability, book_appointment.
 - If the caller gives a DATE and TIME (e.g. Tuesday at 2 PM), call book_appointment
   immediately. Do not stall asking for email or a "full date".
