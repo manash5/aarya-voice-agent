@@ -3,6 +3,10 @@ __pycache__/
 *.pyc
 .venv/
 
+# Google / cloud credentials (never commit)
+voice-agent/credentials/
+**/service-account*.json
+
 # frontend
 node_modules/
 .next/

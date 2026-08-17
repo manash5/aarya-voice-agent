@@ -20,26 +20,58 @@ backend/        Agent config storage, call dispatch, call history - not started
 ### `voice-agent/`
 
 Real-time voice pipeline built on [LiveKit Agents](https://docs.livekit.io/agents/):
-speech-to-text -> turn detection -> LLM -> text-to-speech, tuned for low latency
-(direct provider connections instead of routing through a gateway, pooled TTS
-connections, tuned turn-detection/endpointing).
+speech-to-text → turn detection → LLM → text-to-speech, tuned for low latency
+(direct provider connections, pooled TTS handshakes, tuned turn detection).
 
-- `agent.py` - the English/Australian receptionist. Groq for the LLM, Deepgram
-  direct for STT/TTS.
-- `nepali_agent.py` - understands Nepali (including Nepali/English code-switching),
-  replies via a Hindi-accented TTS voice since no Nepali TTS voice was available
-  for free.
-- `rag_agent.py` - stub agent with a knowledge-base lookup tool scaffolded in;
-  the actual retrieval logic isn't implemented yet.
-- `prompt.py` - the shared persona: how the agent talks (concise, human-sounding,
-  no AI tells), separate from what it knows (`company_profile`, injected per
-  deployment).
-- `config/`, `evaluation/` - TTS connection pooling and per-call latency/usage
-  logging, factored out of `agent.py` so each is independently editable.
+Shared logic lives in the `aarya/` package; thin entrypoint scripts pick a pipeline
+and company profile.
 
-Run with `cd voice-agent && uv run agent.py console` (or `nepali_agent.py` /
-`rag_agent.py`). Needs a `.env.local` with the relevant API keys - see
-`.env.example`.
+```
+voice-agent/
+├── agent.py                    # English receptionist (Scalina Media demo)
+├── nepali_agent.py             # Nepali STT + Hindi-accented TTS
+├── rag_agent.py                # English + knowledge-base tool stub
+├── gemini_realtime_agent.py    # Gemini Live speech-to-speech
+├── aarya/
+│   ├── assistant.py            # Shared Agent subclass + instructions
+│   ├── session.py              # Warm TTS → start → greet bootstrap
+│   ├── turn_handling.py        # Shared endpointing / interruption defaults
+│   ├── prompts/                # Persona (how it talks) vs company (what it knows)
+│   ├── pipelines/
+│   │   ├── common.py           # Shared Deepgram STT/TTS, Groq LLM, VAD helpers
+│   │   ├── english.py          # English receptionist stack
+│   │   ├── rag.py              # English + knowledge-base tool
+│   │   └── nepali.py           # Nepali STT + Hindi TTS
+│   ├── companies/              # One profile module per client
+│   ├── config/                 # TTS pool warm-up, AssemblyAI patch
+│   └── evaluation/             # Per-call latency / usage logging
+├── .env.example
+└── pyproject.toml
+```
+
+| Entrypoint | LiveKit agent name | Notes |
+|---|---|---|
+| `agent.py` | `aarya` | Deepgram STT + Aura 2 Apollo (male) TTS, Groq LLM |
+| `nepali_agent.py` | `aarya-nepali` | Scribe/AssemblyAI STT, Cartesia Hindi TTS via inference |
+| `rag_agent.py` | `aarya-rag` | Same Deepgram English stack + `search_knowledge_base` stub |
+| `gemini_realtime_agent.py` | `aarya-gemini-live` | Single RealtimeModel (no cascaded STT/TTS) |
+
+**Run** (from `voice-agent/`):
+
+```bash
+uv sync
+cp .env.example .env.local   # fill in keys
+uv run agent.py console
+# or: uv run nepali_agent.py console
+# or: uv run rag_agent.py console
+# or: uv run gemini_realtime_agent.py console
+```
+
+**Swap a company:** add `aarya/companies/<client>.py` exporting `COMPANY_NAME` /
+`COMPANY_PROFILE`, then import those in the entrypoint instead of `scalina_media`.
+
+**Add a language / stack:** add a builder under `aarya/pipelines/`, then a thin
+entrypoint that calls `start_pipeline_session(...)`.
 
 ### `frontend/`
 
