@@ -9,8 +9,9 @@ from livekit import agents
 from livekit.agents import AgentServer, RunContext, function_tool
 
 from aarya.assistant import Assistant
+from aarya.companies.ozi_hygiene import COMPANY_PROFILE, GREETING
 from aarya.pipelines.rag import build_rag_pipeline
-from aarya.session import english_greeting, start_pipeline_session
+from aarya.session import start_pipeline_session
 
 logger = logging.getLogger(__name__)
 load_dotenv(".env.local")
@@ -48,10 +49,10 @@ async def my_agent(ctx: agents.JobContext):
     await start_pipeline_session(
         ctx=ctx,
         session=bundle.session,
-        agent=RagAssistant(agent_name=agent_name),
+        agent=RagAssistant(agent_name=agent_name, company_profile=COMPANY_PROFILE),
         pooled_tts=bundle.pooled_tts,
         job_start_time=job_start_time,
-        greeting=english_greeting(agent_name),
+        greeting=GREETING,
     )
 
 
