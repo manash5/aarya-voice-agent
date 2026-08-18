@@ -14,12 +14,6 @@ from aarya.tools import google_calendar as gcal
 
 logger = logging.getLogger(__name__)
 
-SHORT_COMPANY = """
-Scalina Media is a digital marketing / social media agency in Sydney.
-Services: content, social growth, SEO, lead gen, websites.
-For quotes: info@scalinamedia.com.
-""".strip()
-
 
 def _calendar_rules() -> str:
     tz = gcal.calendar_timezone()
@@ -57,10 +51,10 @@ class CalendarAssistant(Agent):
         company_profile: str = "",
         output_language: str = "",
     ):
-        profile = (company_profile or SHORT_COMPANY).strip()
+        profile = company_profile.strip()
         instructions = build_instructions(
             agent_name=agent_name,
-            company_profile=f"{_calendar_rules()}\n\n{profile}",
+            company_profile=f"{_calendar_rules()}\n\n{profile}".strip(),
             output_language=output_language,
         )
         super().__init__(instructions=instructions)

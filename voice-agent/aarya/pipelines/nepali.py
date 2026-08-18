@@ -1,11 +1,11 @@
 """Nepali pipeline: Scribe/AssemblyAI STT, Groq LLM, Cartesia Hindi TTS via inference."""
 
 from livekit.agents import AgentSession, inference, llm, stt, tts
-from livekit.plugins import assemblyai, groq
+from livekit.plugins import assemblyai
 
 import aarya.config.assemblyai_patch  # noqa: F401 - before assemblyai.STT()
 from aarya.pipelines.bundle import PipelineBundle
-from aarya.pipelines.common import low_latency_vad
+from aarya.pipelines.common import groq_llm, low_latency_vad
 from aarya.turn_handling import default_turn_handling
 
 
@@ -23,7 +23,9 @@ def build_nepali_pipeline() -> PipelineBundle:
         ),
         llm=llm.FallbackAdapter(
             [
-                groq.LLM(model="llama-3.3-70b-versatile", max_completion_tokens=80),
+                # was llama-3.3-70b-versatile; revert here if Devanagari output
+                # regresses, gpt-oss hasn't been checked against a native speaker
+                groq_llm(80),
                 inference.LLM(model="google/gemini-2.5-flash-lite"),
                 inference.LLM(model="openai/gpt-4.1-mini"),
             ]

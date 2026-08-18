@@ -1,4 +1,4 @@
-"""English receptionist entrypoint (Scalina Media demo + Google Calendar)."""
+"""English receptionist entrypoint (Ozi Hygiene and Packaging + Google Calendar)."""
 
 import logging
 import time
@@ -7,10 +7,10 @@ from dotenv import load_dotenv
 from livekit import agents
 from livekit.agents import AgentServer
 
-from aarya.assistants.calendar import SHORT_COMPANY, CalendarAssistant
-from aarya.companies.scalina_media import COMPANY_NAME
+from aarya.assistants.calendar import CalendarAssistant
+from aarya.companies.ozi_hygiene import COMPANY_BRIEF, GREETING
 from aarya.pipelines.calendar import build_calendar_pipeline
-from aarya.session import english_greeting, start_pipeline_session
+from aarya.session import start_pipeline_session
 
 logger = logging.getLogger(__name__)
 load_dotenv(".env.local")
@@ -29,11 +29,12 @@ async def my_agent(ctx: agents.JobContext):
         session=bundle.session,
         agent=CalendarAssistant(
             agent_name=agent_name,
-            company_profile=SHORT_COMPANY,
+            # brief, not the full profile - this rides on every turn
+            company_profile=COMPANY_BRIEF,
         ),
         pooled_tts=bundle.pooled_tts,
         job_start_time=job_start_time,
-        greeting=english_greeting(agent_name, COMPANY_NAME),
+        greeting=GREETING,
     )
 
 

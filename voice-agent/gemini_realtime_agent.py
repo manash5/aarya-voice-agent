@@ -15,7 +15,7 @@ from livekit.agents import (
 from livekit.plugins import google, noise_cancellation
 
 from aarya.assistant import Assistant
-from aarya.companies.scalina_media import COMPANY_PROFILE
+from aarya.companies.ozi_hygiene import COMPANY_PROFILE
 from aarya.evaluation.call_metrics import attach_realtime_latency_logging
 
 logger = logging.getLogger(__name__)
@@ -33,7 +33,9 @@ async def my_agent(ctx: agents.JobContext):
     session = AgentSession(
         llm=google.realtime.RealtimeModel(
             model="gemini-3.1-flash-live-preview",
-            voice="Puck",
+            # feminine prebuilt voice, to match the Deepgram side (Aura 2 Theia).
+            # Other feminine options: Aoede (breezy), Leda (youthful), Zephyr (bright).
+            voice="Kore",
         ),
     )
 
