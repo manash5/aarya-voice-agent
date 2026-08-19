@@ -1,9 +1,10 @@
 """Shared STT / LLM / VAD / Deepgram TTS pieces for English-family pipelines."""
 
 from livekit.agents import inference, llm, stt, tts
-from livekit.plugins import deepgram, groq, silero
+from livekit.plugins import deepgram, groq, silero, mistralai
 
 from aarya.pipelines.deepgram_tts import SpeedyDeepgramTTS
+
 
 # Feminine Aura 2 voice. Theia is the Australian-accented one ("expressive, polite,
 # sincere"), which suits Australian callers. Other feminine options if you want a
@@ -13,6 +14,7 @@ DEEPGRAM_TTS_MODEL = "aura-2-theia-en"
 DEEPGRAM_TTS_INFERENCE = "deepgram/aura-2:theia"
 # Mild bump over Deepgram's default pace; valid range is 0.7-1.5.
 DEEPGRAM_TTS_SPEED = 1.15
+MISTRAL_MODEL = "mistral-small-latest"
 
 
 def low_latency_vad():
@@ -22,7 +24,7 @@ def low_latency_vad():
 
 def english_stt() -> stt.FallbackAdapter:
     return stt.FallbackAdapter(
-        [
+        [   
             deepgram.STT(
                 model="nova-3",
                 language="en",
@@ -66,6 +68,15 @@ def english_llm(*, max_completion_tokens: int = 60) -> llm.FallbackAdapter:
     )
 
 
+def mistral_llm(max_completion_tokens: int) -> mistralai.LLM:
+    """Direct Mistral API client — same role as groq_llm()."""
+    return mistralai.LLM(
+        model=MISTRAL_MODEL,
+        max_completion_tokens=max_completion_tokens,
+        # temperature=0.3,  # optional — lower = more deterministic for phone calls
+    )
+
+
 def tool_llm(*, max_completion_tokens: int = 160) -> llm.FallbackAdapter:
     """LLM stack for function tools (calendar, RAG).
 
@@ -75,6 +86,7 @@ def tool_llm(*, max_completion_tokens: int = 160) -> llm.FallbackAdapter:
     """
     return llm.FallbackAdapter(
         [
+            mistralai.LLM(model="mistral-small-latest", max_completion_tokens=80),
             inference.LLM(model="google/gemini-2.5-flash-lite"),
             inference.LLM(model="openai/gpt-4.1-mini"),
             groq_llm(max_completion_tokens),

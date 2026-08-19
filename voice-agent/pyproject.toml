@@ -18,6 +18,12 @@ dependencies = [
     "python-dotenv>=1.2.2",
     "google-api-python-client>=2.179.0",
     "google-auth>=2.40.0",
+    "tzdata>=2026.3",
+    "agent-py>=0.0.24",
+    "console>=0.9912",
+    "mistralai>=2.9.3",
+    "openai>=2.53.0",
+    "livekit-plugins-mistralai>=1.6.8",
 ]
 
 [tool.setuptools.packages.find]

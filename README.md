@@ -13,7 +13,7 @@ configuration rather than forked code.
 
 ```
 voice-agent/    LiveKit-based voice agents (Python) - the working part today
-frontend/       Admin UI for creating/testing agents (Next.js) - bare scaffold
+frontend/       Admin UI for creating/testing agents (Next.js) - UI only, local state
 backend/        Agent config storage, call dispatch, call history - not started
 ```
 
@@ -75,9 +75,20 @@ entrypoint that calls `start_pipeline_session(...)`.
 
 ### `frontend/`
 
-Bare Next.js scaffold (TypeScript, Tailwind, App Router). Will become the admin
-panel: pick a language/agent variant, provide company info, test the agent by
-voice in-browser, review past call transcripts and metrics. Not built out yet.
+Admin console (Next.js 16, TypeScript, Tailwind v4). Create an assistant, pick
+which of the three agents runs it, give it company info and documents, choose a
+voice, attach tools.
+
+```bash
+cd frontend
+npm install
+npm run dev      # http://localhost:3000
+```
+
+UI only for now - no login and no API. Assistants live in `localStorage`, and
+uploaded documents never leave the browser. Voice previews, in-browser calling,
+document indexing, phone numbers and call logs are all placeholders waiting on
+the backend. See `frontend/README.md`.
 
 ### `backend/`
 
