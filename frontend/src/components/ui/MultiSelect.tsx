@@ -1,9 +1,10 @@
 "use client";
 
-import { Check, ChevronDown, Search } from "lucide-react";
+import { ChevronDown, Search } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { Badge } from "@/components/ui/controls";
+import { CheckBox } from "@/components/ui/Form";
+import { Tag } from "@/components/ui/Status";
 import { cn } from "@/lib/cn";
 
 export interface MultiSelectItem {
@@ -69,76 +70,79 @@ export function MultiSelect({
     <div className="relative" ref={rootRef}>
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="flex min-h-9 w-full items-center justify-between gap-3 rounded-lg border border-line bg-panel-2 px-3 py-1.5 text-left text-sm transition-colors hover:border-ink-dim"
+        aria-expanded={open}
+        onClick={() => setOpen((value) => !value)}
+        className={cn(
+          "flex min-h-9 w-full items-center justify-between gap-3 rounded-2 border bg-sunken px-3 py-1.5 text-left",
+          "transition-colors duration-[--fast] ease-[--ease]",
+          open ? "border-accent-line" : "border-line hover:border-line-strong",
+        )}
       >
         <span className="flex flex-wrap items-center gap-1.5">
           {selected.length === 0 ? (
-            <span className="text-ink-dim">{placeholder}</span>
+            <span className="text-ui text-text-3">{placeholder}</span>
           ) : (
             selected.map((id) => (
-              <Badge key={id} tone="accent" className="font-mono">
+              <Tag key={id} tone="neutral" className="font-mono">
                 {items.find((item) => item.id === id)?.name ?? id}
-              </Badge>
+              </Tag>
             ))
           )}
         </span>
-        <ChevronDown className={cn("h-4 w-4 shrink-0 text-ink-dim transition-transform", open && "rotate-180")} />
+        <ChevronDown
+          className={cn(
+            "h-3.5 w-3.5 shrink-0 text-text-3 transition-transform duration-[--base] ease-[--ease]",
+            open && "rotate-180",
+          )}
+          strokeWidth={1.75}
+        />
       </button>
 
       {open ? (
-        <div className="absolute z-30 mt-1.5 w-full overflow-hidden rounded-xl border border-line bg-elevated shadow-2xl shadow-black/50">
-          <div className="flex items-center gap-2 border-b border-line-soft px-3 py-2">
-            <Search className="h-3.5 w-3.5 text-ink-dim" />
+        <div className="animate-menu absolute z-30 mt-1.5 w-full overflow-hidden rounded-3 border border-line bg-raised shadow-[var(--shadow-menu)]">
+          <div className="flex items-center gap-2 border-b border-line px-3 py-2.5">
+            <Search className="h-3.5 w-3.5 shrink-0 text-text-3" strokeWidth={1.75} />
             <input
               autoFocus
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search tools"
-              className="w-full bg-transparent text-xs text-ink outline-none placeholder:text-ink-dim"
+              className="w-full bg-transparent text-ui text-text outline-none placeholder:text-text-3"
             />
           </div>
-          <div className="max-h-72 overflow-y-auto py-1">
+          <div className="max-h-72 overflow-y-auto p-1">
             {Object.entries(groups).map(([group, groupItems]) => (
               <div key={group}>
-                <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-ink-dim">
-                  {group}
-                </p>
-                {groupItems.map((item) => {
-                  const isSelected = selected.includes(item.id);
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => toggle(item.id)}
-                      className="flex w-full items-start gap-2.5 px-3 py-2 text-left transition-colors hover:bg-panel-2"
-                    >
-                      <span
-                        className={cn(
-                          "mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border",
-                          isSelected ? "border-accent bg-accent text-accent-ink" : "border-line",
-                        )}
-                      >
-                        {isSelected ? <Check className="h-3 w-3" strokeWidth={3} /> : null}
+                <p className="eyebrow px-2.5 pb-1 pt-3">{group}</p>
+                {groupItems.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => toggle(item.id)}
+                    className="flex w-full items-start gap-2.5 rounded-2 px-2.5 py-2 text-left transition-colors duration-[--fast] hover:bg-raised-hover"
+                  >
+                    <span className="mt-0.5">
+                      <CheckBox checked={selected.includes(item.id)} />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="flex items-center gap-2">
+                        <span className="font-mono text-meta text-text">{item.name}</span>
+                        {item.planned ? <Tag tone="warn">planned</Tag> : null}
                       </span>
-                      <span className="min-w-0">
-                        <span className="flex items-center gap-2">
-                          <span className="font-mono text-xs text-ink">{item.name}</span>
-                          {item.planned ? <Badge tone="outline">planned</Badge> : null}
+                      {item.description ? (
+                        <span className="mt-0.5 block text-meta text-text-3">
+                          {item.description}
                         </span>
-                        {item.description ? (
-                          <span className="mt-0.5 block text-[11px] leading-relaxed text-ink-dim">
-                            {item.description}
-                          </span>
-                        ) : null}
-                      </span>
-                    </button>
-                  );
-                })}
+                      ) : null}
+                    </span>
+                  </button>
+                ))}
               </div>
             ))}
             {Object.keys(groups).length === 0 ? (
-              <p className="px-3 py-6 text-center text-xs text-ink-dim">No tools match that search.</p>
+              <p className="px-3 py-8 text-center text-meta text-text-3">
+                No tools match that search.
+              </p>
             ) : null}
           </div>
         </div>

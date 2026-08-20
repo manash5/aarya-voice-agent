@@ -1,4 +1,5 @@
-import type { Assistant, AgentTypeId } from "@/lib/types";
+import { composeSystemPrompt } from "@/lib/behavior";
+import type { AgentTypeId, Assistant, BehaviorConfig } from "@/lib/types";
 
 /**
  * Static option lists for the admin UI. Values mirror what `voice-agent/`
@@ -35,7 +36,7 @@ export const AGENT_TYPES: Record<
     tagline: "Fastest stack. Deepgram in, Deepgram out.",
     description:
       "Deepgram Nova-3 speech-to-text, Groq gpt-oss-120b, Aura 2 text-to-speech. The lowest-latency option.",
-    accent: "#14b88a",
+    accent: "#c9bda3",
   },
   nepali: {
     id: "nepali",
@@ -46,7 +47,7 @@ export const AGENT_TYPES: Record<
     tagline: "Nepali speech in, Hindi-accented speech out.",
     description:
       "ElevenLabs Scribe / AssemblyAI speech-to-text for Nepali, replies in Devanagari, Cartesia Sonic 3 Hindi voice.",
-    accent: "#6f8ef5",
+    accent: "#c9a49b",
   },
   rag: {
     id: "rag",
@@ -57,7 +58,7 @@ export const AGENT_TYPES: Record<
     tagline: "English stack plus document retrieval.",
     description:
       "Same English pipeline with a tool-capable model, so the assistant can look things up in uploaded documents. Retrieval itself is still a stub.",
-    accent: "#c78bf0",
+    accent: "#a3aec9",
   },
 };
 
@@ -341,18 +342,36 @@ Business hours for booking suggestions are 9:00-17:00 local time.`;
 type AssistantDefaults = Omit<Assistant, "id" | "name" | "createdAt" | "updatedAt" | "status">;
 
 export function agentTypeDefaults(agentType: AgentTypeId): AssistantDefaults {
+  const behavior: BehaviorConfig = {
+    role: "Answer the phone for this company and help whoever calls.",
+    tone: "Warm, direct, and unhurried. Never salesy.",
+    goals: [
+      "Answer what the caller actually asked",
+      "Capture a way to reach them back",
+    ],
+    rules: [
+      "Never invent a price, a date or a policy",
+      "Say you'll check rather than guessing",
+    ],
+    conversationStyle:
+      "Keep replies to one sentence where you can, use contractions, and never read out a list.",
+    escalation: "Hand over to a person if the caller asks for one, or gets frustrated.",
+    custom: "",
+  };
+
   const base: AssistantDefaults = {
     agentType,
     companyName: "",
     companyProfile: "",
+    phoneNumber: "",
+    behavior,
     tasks: ["answer_questions", "take_messages"],
     tools: [],
     model: {
       provider: "groq",
       model: "openai/gpt-oss-120b",
       firstMessage: "Hey, thanks for calling - how can I help?",
-      systemPrompt:
-        "Keep replies to one sentence where you can, use contractions, and never read out a list.",
+      systemPrompt: composeSystemPrompt(behavior),
       temperature: 0.4,
       maxTokens: 80,
     },
@@ -374,13 +393,18 @@ export function agentTypeDefaults(agentType: AgentTypeId): AssistantDefaults {
   };
 
   if (agentType === "nepali") {
+    const nepaliBehavior: BehaviorConfig = {
+      ...behavior,
+      conversationStyle:
+        "Always reply in Nepali, written in Devanagari. Callers may mix in English words - understand them, but keep your own replies in Nepali.",
+    };
     return {
       ...base,
+      behavior: nepaliBehavior,
       model: {
         ...base.model,
         firstMessage: "नमस्ते, म कसरी मद्दत गर्न सक्छु?",
-        systemPrompt:
-          "Always reply in Nepali, written in Devanagari. Callers may mix in English words - understand them, but keep your own replies in Nepali.",
+        systemPrompt: composeSystemPrompt(nepaliBehavior),
       },
       voice: { provider: "cartesia", voiceId: "sonic-3-hi-female", speed: 1, background: "none" },
       transcriber: { provider: "elevenlabs", model: "scribe_v2_realtime", language: "ne" },
@@ -389,14 +413,20 @@ export function agentTypeDefaults(agentType: AgentTypeId): AssistantDefaults {
   }
 
   if (agentType === "rag") {
+    const ragBehavior: BehaviorConfig = {
+      ...behavior,
+      rules: [...behavior.rules, "Answer from the uploaded sources before anything else"],
+    };
     return {
       ...base,
+      behavior: ragBehavior,
       tasks: [...base.tasks, "search_documents"],
       model: {
         ...base.model,
         provider: "mistral",
         model: "mistral-small-latest",
         maxTokens: 160,
+        systemPrompt: composeSystemPrompt(ragBehavior),
       },
       advanced: { ...base.advanced, maxDelay: 0.7 },
     };
