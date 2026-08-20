@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 
+import { EMPTY_BEHAVIOR, composeSystemPrompt } from "@/lib/behavior";
 import { SAMPLE_COMPANY_PROFILE, agentTypeDefaults, toolsForTasks } from "@/lib/catalog";
 import type { Assistant, AgentTypeId } from "@/lib/types";
 
@@ -67,6 +68,25 @@ function seed(): Assistant[] {
   return [{ ...reception, status: "published" }, nepaliLine];
 }
 
+/**
+ * Records written before structured behaviour existed only have a raw prompt.
+ * Moving it into `custom` keeps every word the operator wrote and recompiles
+ * to a byte-identical prompt, so nothing about the agent changes on upgrade.
+ */
+function migrate(assistant: Assistant): Assistant {
+  if (assistant.behavior && typeof assistant.phoneNumber === "string") return assistant;
+  const behavior = assistant.behavior ?? {
+    ...EMPTY_BEHAVIOR,
+    custom: assistant.model?.systemPrompt ?? "",
+  };
+  return {
+    ...assistant,
+    phoneNumber: assistant.phoneNumber ?? "",
+    behavior,
+    model: { ...assistant.model, systemPrompt: composeSystemPrompt(behavior) },
+  };
+}
+
 function emit() {
   for (const listener of listeners) listener();
 }
@@ -88,7 +108,7 @@ function hydrate() {
   } catch {
     stored = null;
   }
-  state = stored ?? seed();
+  state = (stored ?? seed()).map(migrate);
   // Write the seed straight back so ids stay stable across reloads.
   if (!stored) persist();
   emit();

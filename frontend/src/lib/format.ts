@@ -15,7 +15,7 @@ export function formatRelative(iso: string) {
   return days === 1 ? "yesterday" : `${days}d ago`;
 }
 
-export function formatDuration(seconds: number) {
+export function formatDuration(seconds: number) { 
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
   return `${mins}:${String(secs).padStart(2, "0")}`;

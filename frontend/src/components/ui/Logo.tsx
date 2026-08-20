@@ -6,8 +6,8 @@ import { cn } from "@/lib/cn";
  * aarya rather than being a plain letter A.
  */
 export function LogoMark({
-  size = 22,
-  strokeWidth = 2.9,
+  size = 20,
+  strokeWidth = 3,
   className,
 }: {
   size?: number;
@@ -35,11 +35,12 @@ export function LogoMark({
   );
 }
 
+/** Mark plus wordmark - the one place the two faces meet. */
 export function Logo({ className }: { className?: string }) {
   return (
-    <span className={cn("flex items-center gap-2", className)}>
-      <LogoMark size={24} className="text-accent" />
-      <span className="text-lg font-semibold lowercase tracking-[-0.045em] text-ink">aarya</span>
+    <span className={cn("flex items-center gap-2.5", className)}>
+      <LogoMark size={18} className="shrink-0 text-text" />
+      <span className="display text-[19px] leading-none text-text">aarya</span>
     </span>
   );
 }

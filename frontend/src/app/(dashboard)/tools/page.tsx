@@ -1,76 +1,99 @@
 "use client";
 
-import { Hammer, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
+import Link from "next/link";
 
-import { PageHeader } from "@/components/dashboard/PageHeader";
-import { Badge, Button } from "@/components/ui/controls";
+import { PageBody, PageHeader } from "@/components/app/PageHeader";
+import { Button, Property, PropertyList, Status } from "@/components/ui";
 import { TOOL_CATALOG } from "@/lib/catalog";
 import { useStore } from "@/lib/store";
 
-export default function ToolsPage() {
-  const { assistants } = useStore();
+/**
+ * Capabilities, not an integrations page. The question this answers is "what
+ * can an agent actually do on a call", so each row leads with the function and
+ * ends with whether it will work.
+ */
+export default function CapabilitiesPage() {
+  const { assistants, hydrated } = useStore();
 
   const groups = TOOL_CATALOG.reduce<Record<string, typeof TOOL_CATALOG>>((acc, tool) => {
     (acc[tool.group] ??= []).push(tool);
     return acc;
   }, {});
 
+  const liveCount = TOOL_CATALOG.filter((t) => t.status === "live").length;
+
   return (
     <>
       <PageHeader
-        title="Tools"
-        description="Functions an assistant can call mid-call. Attach them per assistant on its Tools tab."
+        title="Capabilities"
+        description={`Functions an agent can call mid-conversation. ${liveCount} of ${TOOL_CATALOG.length} are built; the rest are stubs waiting on the backend.`}
         action={
-          <Button variant="secondary" size="sm" disabled>
-            <Plus className="h-3.5 w-3.5" />
-            New custom tool
+          <Button variant="secondary" size="lg" disabled>
+            <Plus className="h-3.5 w-3.5" strokeWidth={2.25} />
+            Custom capability
           </Button>
         }
       />
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-8 py-6">
-        <div className="mx-auto max-w-4xl space-y-8">
+      <PageBody>
+        <div className="animate-enter space-y-10">
           {Object.entries(groups).map(([group, tools]) => (
             <section key={group}>
-              <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-ink-dim">
-                {group}
-              </h2>
-              <div className="grid gap-3 sm:grid-cols-2">
+              <h2 className="text-heading font-medium text-text">{group}</h2>
+              <ul className="mt-3 divide-y divide-line border-t border-line">
                 {tools.map((tool) => {
-                  const usedBy = assistants.filter((assistant) =>
-                    assistant.tools.includes(tool.id),
-                  ).length;
+                  const users = assistants.filter((a) => a.tools.includes(tool.id));
                   return (
-                    <div key={tool.id} className="rounded-xl border border-line bg-panel p-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <span className="flex items-center gap-2">
-                          <span className="flex h-7 w-7 items-center justify-center rounded-md bg-elevated text-ink-dim">
-                            <Hammer className="h-3.5 w-3.5" />
-                          </span>
-                          <span className="font-mono text-xs text-ink">{tool.name}</span>
-                        </span>
-                        {tool.status === "live" ? (
-                          <Badge tone="accent">live</Badge>
-                        ) : (
-                          <Badge tone="warn">planned</Badge>
-                        )}
+                    <li key={tool.id} className="py-4">
+                      <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-3">
+                            <span className="font-mono text-ui text-text">{tool.name}</span>
+                            {tool.status === "live" ? (
+                              <Status tone="live">Ready</Status>
+                            ) : (
+                              <Status tone="warn">Not built</Status>
+                            )}
+                          </div>
+                          <p className="mt-1.5 max-w-prose text-meta text-text-3">
+                            {tool.description}
+                          </p>
+                        </div>
+
+                        <div className="w-full max-w-[15rem] shrink-0">
+                          <PropertyList>
+                            <Property label="Used by">
+                              {!hydrated
+                                ? "—"
+                                : users.length === 0
+                                  ? "No agents"
+                                  : users.length === 1
+                                    ? users[0].name
+                                    : `${users.length} agents`}
+                            </Property>
+                          </PropertyList>
+                        </div>
                       </div>
-                      <p className="mt-3 text-xs leading-relaxed text-ink-dim">
-                        {tool.description}
-                      </p>
-                      <p className="mt-3 text-[11px] text-ink-dim">
-                        {usedBy === 0
-                          ? "Not attached to any assistant"
-                          : `Used by ${usedBy} assistant${usedBy > 1 ? "s" : ""}`}
-                      </p>
-                    </div>
+                    </li>
                   );
                 })}
-              </div>
+              </ul>
             </section>
           ))}
+
+          <p className="border-t border-line pt-6 text-meta text-text-3">
+            Attach capabilities to an agent from its{" "}
+            <Link
+              href="/assistants"
+              className="rounded-1 text-text-2 underline decoration-line-strong underline-offset-2 transition-colors hover:text-text"
+            >
+              Actions section
+            </Link>
+            . Picking a task attaches whatever it needs automatically.
+          </p>
         </div>
-      </div>
+      </PageBody>
     </>
   );
 }

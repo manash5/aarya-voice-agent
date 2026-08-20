@@ -1,135 +1,152 @@
 "use client";
 
-import { Bot, Plus, Search } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { AssistantEditor } from "@/components/dashboard/AssistantEditor";
-import { CreateAssistantModal } from "@/components/dashboard/CreateAssistantModal";
-import { Button, EmptyState } from "@/components/ui/controls";
-import { AGENT_TYPES } from "@/lib/catalog";
+import { PageBody, PageHeader } from "@/components/app/PageHeader";
+import { AssistantRow } from "@/components/app/AssistantRow";
+import { CreateAssistantModal } from "@/components/app/CreateAssistantModal";
+import { Button, EmptyState, RowSkeleton } from "@/components/ui";
 import { cn } from "@/lib/cn";
-import { formatRelative } from "@/lib/format";
 import { useStore } from "@/lib/store";
+import { useRouter } from "next/navigation";
 
-export default function AssistantsPage() {
-  const { assistants, hydrated, add, update, duplicate, remove } = useStore();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+export default function AgentsPage() {
+  const { assistants, hydrated, add } = useStore();
   const [query, setQuery] = useState("");
+  const [status, setStatus] = useState<"all" | "live" | "draft">("all");
+  const [sort, setSort] = useState<"updated" | "name">("updated");
   const [creating, setCreating] = useState(false);
+  const router = useRouter();
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    if (!needle) return assistants;
-    return assistants.filter(
-      (assistant) =>
-        assistant.name.toLowerCase().includes(needle) ||
-        assistant.companyName.toLowerCase().includes(needle),
-    );
-  }, [assistants, query]);
+    const searched = !needle
+      ? assistants
+      : assistants.filter(
+          (assistant) =>
+            assistant.name.toLowerCase().includes(needle) ||
+            assistant.companyName.toLowerCase().includes(needle),
+        );
 
-  // Falls back to the first assistant so a delete or a fresh load always lands
-  // on something without an effect syncing the selection.
-  const selected =
-    assistants.find((assistant) => assistant.id === selectedId) ?? assistants[0] ?? null;
+    const scoped = searched.filter((assistant) => {
+      if (status === "all") return true;
+      return status === "live" ? assistant.status === "published" : assistant.status === "draft";
+    });
+
+    return [...scoped].sort((a, b) => {
+      if (sort === "name") return a.name.localeCompare(b.name);
+      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+    });
+  }, [assistants, query, status, sort]);
+
+  const live = assistants.filter((a) => a.status === "published").length;
 
   return (
-    <div className="flex h-full min-h-0">
-      <div className="flex w-72 shrink-0 flex-col border-r border-line bg-panel">
-        <div className="space-y-3 border-b border-line-soft px-4 py-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-sm font-semibold text-ink">Assistants</h1>
-            <span className="text-[11px] text-ink-dim">{assistants.length}</span>
-          </div>
-          <Button variant="primary" size="sm" className="w-full" onClick={() => setCreating(true)}>
-            <Plus className="h-3.5 w-3.5" />
-            Create assistant
+    <>
+      <PageHeader
+        title="Agents"
+        description={
+          !hydrated
+            ? undefined
+            : assistants.length === 0
+              ? "Nothing here yet."
+              : live === 0
+                ? `${assistants.length} agent${assistants.length > 1 ? "s" : ""}, none live yet.`
+                : `${assistants.length} agent${assistants.length > 1 ? "s" : ""}, ${live} taking calls.`
+        }
+        action={
+          <Button variant="primary" size="lg" onClick={() => setCreating(true)}>
+            <Plus className="h-3.5 w-3.5" strokeWidth={2.25} />
+            New agent
           </Button>
-          <div className="flex items-center gap-2 rounded-lg border border-line bg-panel-2 px-2.5">
-            <Search className="h-3.5 w-3.5 shrink-0 text-ink-dim" />
-            <input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search"
-              className="h-8 w-full bg-transparent text-xs text-ink outline-none placeholder:text-ink-dim"
-            />
-          </div>
-        </div>
+        }
+      />
 
-        <div className="min-h-0 flex-1 overflow-y-auto p-2">
-          {filtered.map((assistant) => {
-            const type = AGENT_TYPES[assistant.agentType];
-            const active = assistant.id === selected?.id;
-            return (
-              <button
-                key={assistant.id}
-                type="button"
-                onClick={() => setSelectedId(assistant.id)}
+      <PageBody>
+        <div className="animate-enter">
+          {assistants.length > 0 ? (
+            <div className="mb-3 flex flex-wrap items-center gap-2">
+              <div
                 className={cn(
-                  "mb-1 flex w-full items-start gap-2.5 rounded-lg px-2.5 py-2.5 text-left transition-colors",
-                  active ? "bg-elevated" : "hover:bg-elevated/60",
+                  "flex min-w-[220px] max-w-xs flex-1 items-center gap-2 rounded-2 border border-line bg-sunken px-2.5",
+                  "transition-colors duration-[--fast] focus-within:border-accent-line",
                 )}
               >
-                <span
-                  className="mt-1.5 h-2 w-2 shrink-0 rounded-full"
-                  style={{ background: type.accent }}
+                <Search className="h-3.5 w-3.5 shrink-0 text-text-3" strokeWidth={1.75} />
+                <input
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Search agents"
+                  aria-label="Search agents"
+                  className="h-8 w-full bg-transparent text-ui text-text outline-none placeholder:text-text-3"
                 />
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm text-ink">{assistant.name}</span>
-                  <span className="mt-0.5 flex items-center gap-1.5 text-[11px] text-ink-dim">
-                    <span className="truncate">
-                      {assistant.companyName || "No company"}
-                    </span>
-                    <span>·</span>
-                    <span className="shrink-0">{formatRelative(assistant.updatedAt)}</span>
-                  </span>
-                </span>
-                {assistant.status === "published" ? (
-                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
-                ) : null}
-              </button>
-            );
-          })}
+              </div>
 
-          {hydrated && filtered.length === 0 ? (
-            <p className="px-3 py-8 text-center text-xs text-ink-dim">
-              {assistants.length === 0 ? "No assistants yet." : "Nothing matches that search."}
-            </p>
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value as typeof status)}
+                className="h-8 rounded-2 border border-line bg-raised px-2.5 text-ui text-text outline-none"
+                aria-label="Filter by status"
+              >
+                <option value="all">All statuses</option>
+                <option value="live">Live</option>
+                <option value="draft">Draft</option>
+              </select>
+
+              <select
+                value={sort}
+                onChange={(e) => setSort(e.target.value as typeof sort)}
+                className="h-8 rounded-2 border border-line bg-raised px-2.5 text-ui text-text outline-none"
+                aria-label="Sort agents"
+              >
+                <option value="updated">Recently updated</option>
+                <option value="name">Name</option>
+              </select>
+            </div>
           ) : null}
-        </div>
-      </div>
 
-      {selected ? (
-        <AssistantEditor
-          key={selected.id}
-          assistant={selected}
-          onChange={(patch) => update(selected.id, patch)}
-          onDuplicate={() => {
-            const copy = duplicate(selected.id);
-            if (copy) setSelectedId(copy.id);
-          }}
-          onDelete={() => remove(selected.id)}
-        />
-      ) : (
-        <div className="flex flex-1 items-center justify-center p-10">
-          <EmptyState
-            icon={<Bot className="h-4 w-4" />}
-            title="No assistant selected"
-            description="Create an assistant to give it a company, tasks, a voice and a knowledge base."
-            action={
-              <Button variant="primary" size="sm" onClick={() => setCreating(true)}>
-                <Plus className="h-3.5 w-3.5" />
-                Create assistant
-              </Button>
-            }
-          />
+          <div className="border-t border-line">
+            {!hydrated ? (
+              <>
+                <RowSkeleton />
+                <RowSkeleton />
+              </>
+            ) : assistants.length === 0 ? (
+              <EmptyState
+                title="No agents yet"
+                description="An agent is a company, a set of tasks and a voice, running on one of the three pipelines. Build one and you can talk to it in the browser straight away."
+                action={
+                  <Button variant="primary" onClick={() => setCreating(true)}>
+                    <Plus className="h-3.5 w-3.5" strokeWidth={2.25} />
+                    Create your first agent
+                  </Button>
+                }
+              />
+            ) : filtered.length === 0 ? (
+              <p className="py-12 text-center text-ui text-text-3">
+                Nothing matches “{query}”.
+              </p>
+            ) : (
+              <div className="stagger">
+                {filtered.map((assistant) => (
+                  <AssistantRow
+                    key={assistant.id}
+                    assistant={assistant}
+                    href={`/assistants/${assistant.id}`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-      )}
+      </PageBody>
 
       <CreateAssistantModal
         open={creating}
         onClose={() => setCreating(false)}
-        onCreate={(input) => setSelectedId(add(input).id)}
+        onCreate={(input) => router.push(`/assistants/${add(input).id}`)}
       />
-    </div>
+    </>
   );
 }

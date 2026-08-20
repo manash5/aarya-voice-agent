@@ -1,39 +1,194 @@
 @import "tailwindcss";
 
+/* ============================================================================
+   Aarya design system
+
+   Warm charcoal, not black. Structure comes from typography, spacing and
+   alignment; borders are hairlines that appear only where a boundary means
+   something. One accent, used for state - never for decoration. The interface
+   is designed to still read correctly with the accent removed entirely.
+   ========================================================================== */
+
 :root {
-  --bg: #08090b;
-  --panel: #0d0f13;
-  --panel-2: #12151a;
-  --elevated: #171b21;
-  --line: #23272f;
-  --line-soft: #1a1e25;
-  --ink: #e9ebee;
-  --ink-muted: #98a1ad;
-  --ink-dim: #6a7280;
-  --accent: #14b88a;
-  --accent-hover: #17cd9a;
-  --accent-ink: #04231a;
-  --warn: #e0a53c;
-  --danger: #e5645f;
+  /* -- Surfaces ------------------------------------------------------------
+     A warm neutral ramp. The canvas is lifted well off black so raised
+     surfaces can sit above it without needing a border to be legible. */
+  --canvas: #f7f6f2;
+  --rail: #ffffff;
+  --raised: #ffffff;
+  --raised-hover: #f2f1ed;
+  --raised-active: #ecebe7;
+  --sunken: #f3f2ef;
+
+  /* -- Borders -------------------------------------------------------------
+     Alpha, so they read consistently on any surface in the ramp. */
+  --line: rgb(20 20 24 / 0.08);
+  --line-strong: rgb(20 20 24 / 0.14);
+
+  /* -- Text ----------------------------------------------------------------
+     Off-white, never #fff: pure white vibrates against a warm ground. */
+  --text: #1f1f24;
+  --text-2: #5b5c62;
+  --text-3: #787a82;
+
+  /* -- Signal --------------------------------------------------------------
+     One colour, and it means one thing: this line is carrying audio. Live
+     calls, the active waveform, the selected object, the focus ring. A petrol
+     teal - the colour of a meter reading. Deliberately not violet and not
+     emerald; both read as generic AI dashboard on sight. */
+  --accent: #1f7a76;
+  --accent-hover: #196a67;
+  --accent-ink: #ffffff;
+  --accent-subtle: rgb(31 122 118 / 0.10);
+  --accent-line: rgb(31 122 118 / 0.34);
+
+  /* -- Presence ------------------------------------------------------------
+     Idle / listening / speaking. Brightness carries the state; only the
+     active modes take the signal colour. */
+  --presence-idle: #a8a7a2;
+  --presence-listening: #1f7a76;
+  --presence-speaking: #b07d31;
+
+  /* -- Status --------------------------------------------------------------
+     Deliberately desaturated so a status dot never outshouts the content. */
+  --danger: #d94e41;
+  --warn: #d19a3c;
+
+  /* -- Pipeline identity ---------------------------------------------------
+     Tints, not colours: enough to tell three things apart, not enough to
+     compete with the accent. */
+  --pipe-english: #cbbd9c;
+  --pipe-nepali: #c9a79a;
+  --pipe-rag: #9fb0d3;
+
+  /* -- Radius --------------------------------------------------------------
+     A closed set. Nothing in the product is rounder than 16px. */
+  --r-1: 6px;
+  --r-2: 8px;
+  --r-3: 12px;
+  --r-4: 16px;
+
+  /* -- Elevation -----------------------------------------------------------
+     Only things that genuinely float: menus, dialogs. Everything else
+     separates through tone and space. */
+  --shadow-menu: 0 10px 26px -14px rgb(0 0 0 / 0.28), 0 2px 6px rgb(0 0 0 / 0.10);
+  --shadow-dialog: 0 28px 60px -24px rgb(0 0 0 / 0.30), 0 10px 20px rgb(0 0 0 / 0.08);
+
+  /* -- Motion -------------------------------------------------------------- */
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --fast: 140ms;
+  --base: 200ms;
+  --slow: 320ms;
+}
+
+[data-theme="dark"] {
+  /* -- Surfaces ------------------------------------------------------------ */
+  --canvas: #121110;
+  --rail: #0e0d0c;
+  --raised: #1a1918;
+  --raised-hover: #201f1d;
+  --raised-active: #262422;
+  --sunken: #0f0e0d;
+
+  /* -- Borders ------------------------------------------------------------- */
+  --line: rgb(255 255 255 / 0.06);
+  --line-strong: rgb(255 255 255 / 0.11);
+
+  /* -- Text ---------------------------------------------------------------- */
+  --text: #edecea;
+  --text-2: #a3a09b;
+  --text-3: #74716d;
+
+  /* -- Signal -------------------------------------------------------------- */
+  --accent: #4fa3a0;
+  --accent-hover: #5fb8b4;
+  --accent-ink: #04211f;
+  --accent-subtle: rgb(79 163 160 / 0.13);
+  --accent-line: rgb(79 163 160 / 0.34);
+
+  /* -- Presence ------------------------------------------------------------ */
+  --presence-idle: #565350;
+  --presence-listening: #4fa3a0;
+  --presence-speaking: #d8cfa8;
+
+  /* -- Status -------------------------------------------------------------- */
+  --danger: #dd7369;
+  --warn: #d3a662;
+
+  /* -- Pipeline identity --------------------------------------------------- */
+  --pipe-english: #c9bda3;
+  --pipe-nepali: #c9a49b;
+  --pipe-rag: #a3aec9;
+
+  /* -- Elevation ----------------------------------------------------------- */
+  --shadow-menu: 0 12px 32px -8px rgb(0 0 0 / 0.55), 0 2px 6px rgb(0 0 0 / 0.35);
+  --shadow-dialog: 0 32px 64px -16px rgb(0 0 0 / 0.65), 0 4px 12px rgb(0 0 0 / 0.4);
 }
 
 @theme inline {
-  --color-bg: var(--bg);
-  --color-panel: var(--panel);
-  --color-panel-2: var(--panel-2);
-  --color-elevated: var(--elevated);
+  --color-canvas: var(--canvas);
+  --color-rail: var(--rail);
+  --color-raised: var(--raised);
+  --color-raised-hover: var(--raised-hover);
+  --color-raised-active: var(--raised-active);
+  --color-sunken: var(--sunken);
+
   --color-line: var(--line);
-  --color-line-soft: var(--line-soft);
-  --color-ink: var(--ink);
-  --color-ink-muted: var(--ink-muted);
-  --color-ink-dim: var(--ink-dim);
+  --color-line-strong: var(--line-strong);
+
+  --color-text: var(--text);
+  --color-text-2: var(--text-2);
+  --color-text-3: var(--text-3);
+
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
   --color-accent-ink: var(--accent-ink);
-  --color-warn: var(--warn);
+  --color-accent-subtle: var(--accent-subtle);
+  --color-accent-line: var(--accent-line);
+
   --color-danger: var(--danger);
+  --color-warn: var(--warn);
+
+  --color-presence-idle: var(--presence-idle);
+  --color-presence-listening: var(--presence-listening);
+  --color-presence-speaking: var(--presence-speaking);
+
+  --radius-1: var(--r-1);
+  --radius-2: var(--r-2);
+  --radius-3: var(--r-3);
+  --radius-4: var(--r-4);
+
+  /* Type scale. Fixed steps, so a size can't be invented at the call site. */
+  --text-display: 2.25rem;
+  --text-display--line-height: 1.05;
+  --text-display--letter-spacing: -0.02em;
+  --text-title: 1.375rem;
+  --text-title--line-height: 1.25;
+  --text-title--letter-spacing: -0.015em;
+  --text-heading: 1rem;
+  --text-heading--line-height: 1.4;
+  --text-heading--letter-spacing: -0.01em;
+  --text-body: 0.875rem;
+  --text-body--line-height: 1.6;
+  --text-ui: 0.8125rem;
+  --text-ui--line-height: 1.4;
+  --text-meta: 0.75rem;
+  --text-meta--line-height: 1.45;
+  --text-micro: 0.6875rem;
+  --text-micro--line-height: 1.4;
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-display);
+}
+
+:root {
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
 }
 
 html,
@@ -42,14 +197,57 @@ body {
 }
 
 body {
-  background: var(--bg);
-  color: var(--ink);
+  background: var(--canvas);
+  color: var(--text);
   font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.875rem;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* ------------------------------------------------------------ typography */
+
+/* Editorial face. Page titles and figures only - never UI chrome. */
+.display {
+  font-family: var(--font-display), ui-serif, Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+
+/* Small caps label above a title, or as a group header in the rail. */
+.eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
 }
 
 ::selection {
-  background: color-mix(in oklab, var(--accent) 35%, transparent);
+  background: var(--accent-subtle);
+  color: var(--text);
+}
+
+/* ----------------------------------------------------------------- focus */
+
+/* Keyboard-only. Pointer interaction gets hover/active feedback instead. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--r-1);
+}
+
+/* ------------------------------------------------------------- scrollbar */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
 }
 
 *::-webkit-scrollbar {
@@ -58,14 +256,14 @@ body {
 }
 
 *::-webkit-scrollbar-thumb {
-  background: #262b33;
+  background: var(--line-strong);
   border: 3px solid transparent;
   background-clip: content-box;
   border-radius: 999px;
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: #333a45;
+  background: var(--line-strong);
   background-clip: content-box;
 }
 
@@ -73,34 +271,167 @@ body {
   background: transparent;
 }
 
-/* Native range input, themed to match the panels. */
+/* ----------------------------------------------------------------- range */
+
 input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
-  height: 4px;
+  height: 3px;
   border-radius: 999px;
-  background: var(--line);
+  background: var(--line-strong);
   outline: none;
+  cursor: pointer;
 }
 
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  height: 14px;
-  width: 14px;
+  height: 12px;
+  width: 12px;
   border-radius: 999px;
-  background: var(--accent);
-  cursor: pointer;
-  border: 3px solid var(--panel);
-  box-shadow: 0 0 0 1px var(--accent);
+  background: var(--text);
+  border: none;
+  cursor: grab;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.5);
+  transition: box-shadow var(--fast) var(--ease);
+}
+
+input[type="range"]:active::-webkit-slider-thumb {
+  cursor: grabbing;
+  box-shadow: 0 0 0 5px var(--accent-subtle);
 }
 
 input[type="range"]::-moz-range-thumb {
-  height: 14px;
-  width: 14px;
+  height: 12px;
+  width: 12px;
   border-radius: 999px;
-  background: var(--accent);
-  cursor: pointer;
-  border: 3px solid var(--panel);
-  box-shadow: 0 0 0 1px var(--accent);
+  background: var(--text);
+  border: none;
+  cursor: grab;
+}
+
+/* ---------------------------------------------------------------- motion */
+
+/* Content settles into place on entry. Small distance, quick, once. */
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Breathing ring behind a live presence dot. Slow enough to read as a state
+   rather than as a spinner. */
+@keyframes presence {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.04; transform: scale(2.2); }
+}
+
+/* Three bars stepping out of phase - the smallest mark that reads as audio. */
+@keyframes bar {
+  0%, 100% { transform: scaleY(0.3); }
+  50% { transform: scaleY(1); }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: -200% 0;
+  }
+  to {
+    background-position: 200% 0;
+  }
+}
+
+.animate-enter {
+  animation: enter var(--slow) var(--ease-out) both;
+}
+
+.animate-fade {
+  animation: fade var(--base) var(--ease) both;
+}
+
+.animate-dialog {
+  animation: dialog-in var(--base) var(--ease-out) both;
+}
+
+.animate-menu {
+  animation: menu-in var(--fast) var(--ease-out) both;
+}
+
+/* Stagger for lists. Capped - beyond a handful of rows it reads as lag. */
+.stagger > * {
+  animation: enter var(--slow) var(--ease-out) both;
+}
+.stagger > *:nth-child(1) { animation-delay: 0ms; }
+.stagger > *:nth-child(2) { animation-delay: 30ms; }
+.stagger > *:nth-child(3) { animation-delay: 60ms; }
+.stagger > *:nth-child(4) { animation-delay: 90ms; }
+.stagger > *:nth-child(5) { animation-delay: 120ms; }
+.stagger > *:nth-child(n + 6) { animation-delay: 150ms; }
+
+.animate-presence {
+  animation: presence 2.4s var(--ease) infinite;
+}
+
+.animate-bar {
+  animation: bar 900ms var(--ease) infinite;
+  transform-origin: center;
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--raised) 25%,
+    var(--raised-hover) 37%,
+    var(--raised) 63%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+  border-radius: var(--r-1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

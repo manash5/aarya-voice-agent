@@ -14,6 +14,23 @@ export interface KnowledgeFile {
   addedAt: string;
 }
 
+/**
+ * Agent behaviour, expressed as the things an operator actually decides:
+ * what the agent is for, how it sounds, what it must and must not do. These
+ * compose into `model.systemPrompt`, which is what the worker receives - the
+ * structure is the editing surface, the prompt is the artefact.
+ */
+export interface BehaviorConfig {
+  role: string;
+  tone: string;
+  goals: string[];
+  rules: string[];
+  conversationStyle: string;
+  escalation: string;
+  /** Raw text appended verbatim, for anything the fields above can't say. */
+  custom: string;
+}
+
 export interface ModelConfig {
   provider: string;
   model: string;
@@ -54,6 +71,9 @@ export interface Assistant {
   updatedAt: string;
   companyName: string;
   companyProfile: string;
+  /** E.164, or empty when no number is attached yet. */
+  phoneNumber: string;
+  behavior: BehaviorConfig;
   /** What the assistant is allowed to do, in business terms. Drives `tools`. */
   tasks: string[];
   tools: string[];
